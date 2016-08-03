@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ExoSample</string>
+    <string name="title_activity_sub">SubActivity</string>
+    <string name="title_activity_sub_sub">SubSubActivity</string>
+</resources>
