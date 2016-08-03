@@ -127,7 +127,7 @@ public class WrapExoPlayer {
 
     public void setSurface(Surface surface) {
         this.surface = surface;
-        pushSurface(false);
+//        pushSurface(false);
     }
 
     public Surface getSurface() {
@@ -150,6 +150,21 @@ public class WrapExoPlayer {
      * @param blockForSurfacePush
      */
     public void pushSurface(boolean blockForSurfacePush) {
+        if (videoRenderer == null) {
+            return;
+        }
+
+        if (blockForSurfacePush) {
+            exoPlayer.blockingSendMessage(
+                    videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
+            Log.v("saito", "映像レンダリング中止");
+        } else {
+            exoPlayer.sendMessage(
+                    videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
+            Log.v("saito", "映像レンダリング開始");
+        }
+    }
+    public void pushSurfaceView(boolean blockForSurfacePush) {
         if (videoRenderer == null) {
             return;
         }
@@ -235,6 +250,7 @@ public class WrapExoPlayer {
         } else {
             // バックグラウンド再生ステータスが無効に変わった場合
             setSelectedTrack(Constants.TYPE_VIDEO, videoTrackToRestore);
+            pushSurface(false);
         }
     }
 

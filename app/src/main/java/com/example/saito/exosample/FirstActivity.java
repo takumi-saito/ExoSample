@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
@@ -39,6 +40,7 @@ public class FirstActivity extends AppCompatActivity {
                 mWrapExoPlayer.setEnableBackgroundAudio(isChecked);
             }
         });
+        backgroudPlayCheckBox.setChecked(mWrapExoPlayer.isEnableBackgroundAudio());
 
         TextView titleText = (TextView) findViewById(R.id.title_text);
         titleText.setText(getClass().getSimpleName());
@@ -61,11 +63,12 @@ public class FirstActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), "file:" + file.getAbsolutePath() + (file.exists() ? "を再生します" : "が存在しません"), Toast.LENGTH_SHORT).show();
 
         SurfaceView surfaceView = (SurfaceView) findViewById(R.id.video_view);
-
+        SurfaceHolder surfaceHolder = surfaceView.getHolder();
+        surfaceHolder.addCallback(createSurfaceHolderCallback());
         // コンテンツのソースをセット
         mWrapExoPlayer.setContentUri(filePath);
         // 映像を表示させるviewの設定
-        mWrapExoPlayer.setSurfaceView(surfaceView);
+//        mWrapExoPlayer.setSurfaceView(surfaceView);
         mWrapExoPlayer.initExoPlayer(this);
 
 
@@ -75,40 +78,54 @@ public class FirstActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         Log.v(getClass().getSimpleName(), new Throwable().getStackTrace()[0].getMethodName());
-        if (Util.SDK_INT > 23) {
-            mWrapExoPlayer.onShown();
-        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         Log.v(getClass().getSimpleName(), new Throwable().getStackTrace()[0].getMethodName());
-        if (Util.SDK_INT <= 23 || mWrapExoPlayer != null) {
-            mWrapExoPlayer.onShown();
-        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         Log.v(getClass().getSimpleName(), new Throwable().getStackTrace()[0].getMethodName());
-        mWrapExoPlayer.onHidden();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         Log.v(getClass().getSimpleName(), new Throwable().getStackTrace()[0].getMethodName());
-        if (Util.SDK_INT > 23) {
-            // 24 N 以上の場合
-            mWrapExoPlayer.onHidden();
-        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         Log.v(getClass().getSimpleName(), new Throwable().getStackTrace()[0].getMethodName());
+    }
+
+    private SurfaceHolder.Callback createSurfaceHolderCallback() {
+        SurfaceHolder.Callback callback = new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                Log.v(getClass().getSimpleName(), new Throwable().getStackTrace()[0].getMethodName());
+                mWrapExoPlayer.setSurface(holder.getSurface());
+                // ExoPlayerがなかったらnewする
+                mWrapExoPlayer.onShown();
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                Log.v(getClass().getSimpleName(), new Throwable().getStackTrace()[0].getMethodName());
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                Log.v(getClass().getSimpleName(), new Throwable().getStackTrace()[0].getMethodName());
+                // サーフェースが破棄されたら映像レンダリングを止める
+                mWrapExoPlayer.onHidden();
+            }
+        };
+        return callback;
     }
 }
